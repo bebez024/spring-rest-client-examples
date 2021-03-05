@@ -31,24 +31,27 @@ public class ApiServiceImpl implements ApiService {
     @Override
     public List<User> getUsers(Integer limit) {
 
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder
-                .fromUriString(api_url)
-                .queryParam("limit", limit);
+        //  Apifaketory is down
+//        UserData userData = restTemplate.getForObject("http://apifaketory.com/api/user?limit=" + limit, UserData.class);
+//        return userData.getData();
 
-        UserData userData = restTemplate.getForObject(uriBuilder.toUriString(), UserData.class);
-        return userData.getData();
+        UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder
+                .fromUriString(api_url)
+                .queryParam("_limit", limit);
+
+        List<User> userData = restTemplate.getForObject(uriComponentsBuilder.toUriString(), List.class);
+
+        return userData;
     }
 
     @Override
     public Flux<User> getUsers(Mono<Integer> limit) {
-
-        return WebClient
-                .create(api_url)
+        return WebClient.create(api_url)
                 .get()
-                .uri(uriBuilder -> uriBuilder.queryParam("limit", limit.block()).build())
+                .uri(uriBuilder -> uriBuilder.queryParam("_limit", limit.toProcessor().block()).build())
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
-                .flatMap(resp -> resp.bodyToMono(UserData.class))
-                .flatMapIterable(UserData::getData);
+                .flatMap(resp -> resp.bodyToMono(List.class))
+                .flatMapIterable(list -> list);
     }
 }
